@@ -5,7 +5,7 @@ import { Cache } from "../cache.js";
 import type { Action } from "../config.js";
 
 export const VIDEO_VERSION = 1;
-export const VIDEO_MODEL = "bytedance-seed/seed-2.0-lite";
+export const VIDEO_MODEL = "bytedance/seedance-2.0/image-to-video";
 
 export interface VideoInput {
   characterName: string;
@@ -13,8 +13,16 @@ export interface VideoInput {
   referenceBytes: Buffer;
   workDir: string;
   cache: Cache;
-  openRouter: {
-    generateVideo(req: { model: string; prompt: string; seed: number; referenceImage: Buffer }): Promise<Buffer>;
+  fal: {
+    uploadImage(bytes: Buffer, mime?: string): Promise<string>;
+    imageToVideo(req: {
+      modelId: string;
+      prompt: string;
+      imageUrl: string;
+      seed: number;
+      resolution?: string;
+      duration?: string;
+    }): Promise<Buffer>;
   };
 }
 
@@ -25,7 +33,7 @@ export interface VideoOutput {
 }
 
 export async function runVideo(input: VideoInput): Promise<VideoOutput> {
-  const { action, referenceBytes, workDir, cache, openRouter } = input;
+  const { action, referenceBytes, workDir, cache, fal } = input;
   const refHash = createHash("sha256").update(referenceBytes).digest("hex");
   const key = cache.key("video", VIDEO_VERSION, {
     model: VIDEO_MODEL,
@@ -42,12 +50,17 @@ export async function runVideo(input: VideoInput): Promise<VideoOutput> {
     await writeFile(filePath, cached);
     return { path: filePath, bytes: cached, cached: true };
   }
-  const bytes = await openRouter.generateVideo({
-    model: VIDEO_MODEL,
+
+  const imageUrl = await fal.uploadImage(referenceBytes);
+  const bytes = await fal.imageToVideo({
+    modelId: VIDEO_MODEL,
     prompt: action.prompt,
     seed: action.seed,
-    referenceImage: referenceBytes,
+    imageUrl,
+    resolution: "720p",
+    duration: "auto",
   });
+
   await cache.put(key, bytes);
   await writeFile(filePath, bytes);
   return { path: filePath, bytes, cached: false };

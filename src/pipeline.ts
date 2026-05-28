@@ -14,7 +14,17 @@ export interface PipelineInput {
   previewTemplateDir: string;
   openRouter: {
     generateImage(req: { model: string; prompt: string; seed: number }): Promise<Buffer>;
-    generateVideo(req: { model: string; prompt: string; seed: number; referenceImage: Buffer }): Promise<Buffer>;
+  };
+  fal: {
+    uploadImage(bytes: Buffer, mime?: string): Promise<string>;
+    imageToVideo(req: {
+      modelId: string;
+      prompt: string;
+      imageUrl: string;
+      seed: number;
+      resolution?: string;
+      duration?: string;
+    }): Promise<Buffer>;
   };
   ffmpeg?: FfmpegRunner;
   probe?: ProbeRunner;
@@ -51,7 +61,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
       referenceBytes: ref.bytes,
       workDir: charWorkDir,
       cache,
-      openRouter: input.openRouter,
+      fal: input.fal,
     });
     log(`[video] ${action.name} ${vid.cached ? "cached" : "running"} (${((Date.now() - tv) / 1000).toFixed(1)}s)`);
 

@@ -25,6 +25,32 @@ async function makeMagentaWithChar(): Promise<Buffer> {
   return sharp(buf, { raw: { width: w, height: h, channels: 3 } }).png().toBuffer();
 }
 
+function makeArgs(dir: string, cfg: Config, refPng: Buffer) {
+  const generateImage = vi.fn().mockResolvedValue(refPng);
+  const uploadImage = vi.fn().mockResolvedValue("data:image/png;base64,abc");
+  const imageToVideo = vi.fn().mockResolvedValue(Buffer.from([0, 1, 2]));
+  const ffmpeg = vi.fn(async (_args: string[], outDir: string) => {
+    await mkdir(outDir, { recursive: true });
+    for (let i = 0; i < cfg.actions[0].frameCount; i++) {
+      await writeFile(path.join(outDir, `frame-${String(i).padStart(3, "0")}.png`), refPng);
+    }
+  });
+  const probe = vi.fn().mockResolvedValue(120);
+  return {
+    args: {
+      config: cfg,
+      workDir: path.join(dir, "work"),
+      cacheDir: path.join(dir, ".cache"),
+      previewTemplateDir: path.join(process.cwd(), "preview"),
+      openRouter: { generateImage } as any,
+      fal: { uploadImage, imageToVideo } as any,
+      ffmpeg, probe,
+    },
+    generateImage,
+    imageToVideo,
+  };
+}
+
 describe("runPipeline", () => {
   it("runs all six stages and produces expected outputs", async () => {
     const cfg: Config = {
@@ -43,28 +69,11 @@ describe("runPipeline", () => {
     };
 
     const refPng = await makeMagentaWithChar();
-    const generateImage = vi.fn().mockResolvedValue(refPng);
-    const generateVideo = vi.fn().mockResolvedValue(Buffer.from([0, 1, 2]));
-
-    const ffmpeg = vi.fn(async (_args: string[], outDir: string) => {
-      await mkdir(outDir, { recursive: true });
-      for (let i = 0; i < 4; i++) {
-        await writeFile(path.join(outDir, `frame-${String(i).padStart(3, "0")}.png`), refPng);
-      }
-    });
-    const probe = vi.fn().mockResolvedValue(120);
-
-    const result = await runPipeline({
-      config: cfg,
-      workDir: path.join(dir, "work"),
-      cacheDir: path.join(dir, ".cache"),
-      previewTemplateDir: path.join(process.cwd(), "preview"),
-      openRouter: { generateImage, generateVideo } as any,
-      ffmpeg, probe,
-    });
+    const { args, generateImage, imageToVideo } = makeArgs(dir, cfg, refPng);
+    const result = await runPipeline(args);
 
     expect(generateImage).toHaveBeenCalledTimes(1);
-    expect(generateVideo).toHaveBeenCalledTimes(3);
+    expect(imageToVideo).toHaveBeenCalledTimes(3);
     const meta = JSON.parse(await readFile(result.metadataPath, "utf8"));
     expect(Object.keys(meta.animations)).toEqual(["idle", "run", "attack"]);
     const sheetMeta = await sharp(result.sheetPath).metadata();
@@ -87,28 +96,11 @@ describe("runPipeline", () => {
       },
     };
     const refPng = await makeMagentaWithChar();
-    const generateImage = vi.fn().mockResolvedValue(refPng);
-    const generateVideo = vi.fn().mockResolvedValue(Buffer.from([0, 1, 2]));
-    const ffmpeg = vi.fn(async (_args: string[], outDir: string) => {
-      await mkdir(outDir, { recursive: true });
-      for (let i = 0; i < 4; i++) {
-        await writeFile(path.join(outDir, `frame-${String(i).padStart(3, "0")}.png`), refPng);
-      }
-    });
-    const probe = vi.fn().mockResolvedValue(120);
-
-    const args = {
-      config: cfg,
-      workDir: path.join(dir, "work"),
-      cacheDir: path.join(dir, ".cache"),
-      previewTemplateDir: path.join(process.cwd(), "preview"),
-      openRouter: { generateImage, generateVideo } as any,
-      ffmpeg, probe,
-    };
+    const { args, generateImage, imageToVideo } = makeArgs(dir, cfg, refPng);
 
     await runPipeline(args);
     await runPipeline(args);
     expect(generateImage).toHaveBeenCalledTimes(1);
-    expect(generateVideo).toHaveBeenCalledTimes(3);
+    expect(imageToVideo).toHaveBeenCalledTimes(3);
   });
 });

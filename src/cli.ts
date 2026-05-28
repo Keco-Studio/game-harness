@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadConfig } from "./config.js";
 import { OpenRouter } from "./openrouter.js";
+import { FalClient } from "./fal.js";
 import { runPipeline } from "./pipeline.js";
 
 const program = new Command();
@@ -22,6 +23,7 @@ program
     try {
       const cfg = await loadConfig(configPath);
       const openRouter = new OpenRouter();
+      const fal = new FalClient();
       const previewTemplateDir = path.resolve(
         path.dirname(fileURLToPath(import.meta.url)),
         "..",
@@ -33,6 +35,7 @@ program
         cacheDir: opts.force ? path.join(opts.cacheDir, `force-${Date.now()}`) : opts.cacheDir,
         previewTemplateDir,
         openRouter,
+        fal,
         log: (line) => console.log(line),
       });
       console.log(`done → ${result.sheetPath}`);
