@@ -1,0 +1,15 @@
+import { ImageSource, SpriteSheet, Animation, range } from "excalibur";
+import sheetUrl from "__SHEET__";
+
+export const heroImage = new ImageSource(sheetUrl);
+
+export const heroSheet = SpriteSheet.fromImageSource({
+  image: heroImage,
+  grid: { rows: 1, columns: __COLUMNS__, spriteWidth: __W__, spriteHeight: __H__ },
+});
+
+export const heroAnimations = {
+__ANIMATIONS__
+};
+
+export const heroAnchor = { x: __AX__, y: __AY__ };
