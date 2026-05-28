@@ -1,6 +1,22 @@
 import { copyFile, cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+
+const ANIMATIONS_TEMPLATE = `import { ImageSource, SpriteSheet, Animation, range } from "excalibur";
+import sheetUrl from "__SHEET__";
+
+export const heroImage = new ImageSource(sheetUrl);
+
+export const heroSheet = SpriteSheet.fromImageSource({
+  image: heroImage,
+  grid: { rows: 1, columns: __COLUMNS__, spriteWidth: __W__, spriteHeight: __H__ },
+});
+
+export const heroAnimations = {
+__ANIMATIONS__
+};
+
+export const heroAnchor = { x: __AX__, y: __AY__ };
+`;
 
 export const EMIT_VERSION = 1;
 
@@ -42,10 +58,9 @@ function renderAnimations(metadata: Metadata): string {
   return lines.join("\n");
 }
 
-async function renderAnimationsTs(templatePath: string, metadata: Metadata, sheetRelPath: string): Promise<string> {
-  const tmpl = await readFile(templatePath, "utf8");
+async function renderAnimationsTs(_templatePath: string, metadata: Metadata, sheetRelPath: string): Promise<string> {
   const total = Object.values(metadata.animations).reduce((n, a) => n + a.frameCount, 0);
-  return tmpl
+  return ANIMATIONS_TEMPLATE
     .replaceAll("__SHEET__", sheetRelPath)
     .replaceAll("__COLUMNS__", String(total))
     .replaceAll("__W__", String(metadata.frameWidth))
@@ -65,13 +80,7 @@ export async function runEmit(input: EmitInput): Promise<EmitOutput> {
   await copyFile(sheetPath, outSheet);
   await copyFile(metadataPath, outMeta);
 
-  const templatePath = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "..",
-    "templates",
-    "animations.ts.tmpl",
-  );
-  const animsTs = await renderAnimationsTs(templatePath, metadata, `./${path.basename(sheetPath)}`);
+  const animsTs = await renderAnimationsTs("", metadata, `./${path.basename(sheetPath)}`);
   const animsTsPath = path.join(outputDir, "animations.ts");
   await writeFile(animsTsPath, animsTs);
 
