@@ -1,0 +1,28 @@
+character:
+  name: hero
+  reference:
+    prompt: "Pixel art knight, magenta background"
+    seed: 42
+actions:
+  - name: idle
+    prompt: "knight idle, magenta background"
+    frameCount: 8
+    frameDurationMs: 125
+    seed: 100
+  - name: run
+    prompt: "knight run, magenta background"
+    frameCount: 8
+    frameDurationMs: 80
+    seed: 101
+  - name: attack
+    prompt: "knight attack, magenta background"
+    frameCount: 8
+    frameDurationMs: 60
+    seed: 102
+output:
+  frameWidth: 64
+  frameHeight: 64
+  anchor: { x: 0.5, y: 0.9375 }
+  backgroundKey: "#FF00FF"
+  backgroundTolerance: 24
+  directory: out
