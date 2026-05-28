@@ -1,0 +1,42 @@
+character:
+  name: hero
+  reference:
+    prompt: >
+      Pixel art knight character, side view facing right, full body,
+      simple armor, sword on hip, neutral pose, T-pose stance,
+      solid magenta #FF00FF background, no shadow, no ground.
+    seed: 42
+
+actions:
+  - name: idle
+    prompt: >
+      Pixel art knight breathing idle animation, side view facing right,
+      subtle chest rise and fall, sword on hip, feet planted,
+      solid magenta #FF00FF background.
+    frameCount: 8
+    frameDurationMs: 125
+    seed: 100
+
+  - name: run
+    prompt: >
+      Pixel art knight running cycle, side view facing right,
+      arms swinging, full stride, solid magenta #FF00FF background.
+    frameCount: 8
+    frameDurationMs: 80
+    seed: 101
+
+  - name: attack
+    prompt: >
+      Pixel art knight sword slash attack, side view facing right,
+      windup to follow-through, solid magenta #FF00FF background.
+    frameCount: 8
+    frameDurationMs: 60
+    seed: 102
+
+output:
+  frameWidth: 64
+  frameHeight: 64
+  anchor: { x: 0.5, y: 0.9375 }
+  backgroundKey: "#FF00FF"
+  backgroundTolerance: 24
+  directory: out
