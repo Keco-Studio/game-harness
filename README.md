@@ -20,8 +20,7 @@ npm run build
 ## Use
 
 ```bash
-export OPEN-ROUTER_KEY=sk-or-v1-...
-node dist/cli.js build examples/character.yaml
+node --env-file=.env dist/cli.js build examples/character.yaml
 ```
 
 Outputs land in `./out/`:
