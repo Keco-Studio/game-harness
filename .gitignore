@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.sprite-cache/
+work/
+out/
+.env
+*.log
